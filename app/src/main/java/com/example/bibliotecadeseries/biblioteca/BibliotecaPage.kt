@@ -1,0 +1,100 @@
+package com.example.bibliotecadeseries.ui.biblioteca
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.bibliotecadeseries.R
+import com.example.bibliotecadeseries.data.model.EstadoSerie
+import com.example.bibliotecadeseries.ui.biblioteca.components.BotonPrincipal
+import com.example.bibliotecadeseries.ui.biblioteca.components.FiltrosEstado
+import com.example.bibliotecadeseries.ui.biblioteca.components.ResumenCard
+import com.example.bibliotecadeseries.ui.biblioteca.components.SerieCard
+import com.example.bibliotecadeseries.ui.theme.BibliotecaTheme
+
+@Composable
+fun BibliotecaPage(viewModel: BibliotecaViewModel = viewModel()) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    BibliotecaTheme {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            when (state.pantalla) {
+                Pantalla.LISTA -> ListaContent(
+                    state = state,
+                    onFiltroChange = viewModel::onFiltroChange,
+                    onTemporadaMas = viewModel::onTemporadaMas,
+                    onTemporadaMenos = viewModel::onTemporadaMenos,
+                    onEliminar = viewModel::onEliminar,
+                    onAbrirFormulario = viewModel::onAbrirFormulario
+                )
+                Pantalla.AGREGAR -> AgregarSerieScreen(
+                    formulario = state.formulario,
+                    hayError = state.errorFormulario,
+                    onTituloChange = viewModel::onTituloChange,
+                    onGeneroChange = viewModel::onGeneroChange,
+                    onTemporadasChange = viewModel::onTemporadasChange,
+                    onGuardar = viewModel::onAgregar,
+                    onCancelar = viewModel::onCancelar
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ListaContent(
+    state: BibliotecaUiState,
+    onFiltroChange: (EstadoSerie?) -> Unit,
+    onTemporadaMas: (Long) -> Unit,
+    onTemporadaMenos: (Long) -> Unit,
+    onEliminar: (Long) -> Unit,
+    onAbrirFormulario: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .safeDrawingPadding()
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        ResumenCard(
+            avanceGeneral = state.avanceGeneral,
+            temporadasVistas = state.temporadasVistas,
+            temporadasTotales = state.temporadasTotales,
+            terminadas = state.terminadas,
+            total = state.total
+        )
+        FiltrosEstado(filtroActual = state.filtro, onFiltroChange = onFiltroChange)
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            if (state.series.isEmpty()) {
+                item { Text(text = stringResource(R.string.lista_vacia)) }
+            } else {
+                items(state.series, key = { it.id }) { serie ->
+                    SerieCard(
+                        serie = serie,
+                        onMas = { onTemporadaMas(serie.id) },
+                        onMenos = { onTemporadaMenos(serie.id) },
+                        onEliminar = { onEliminar(serie.id) }
+                    )
+                }
+            }
+        }
+        BotonPrincipal(texto = stringResource(R.string.boton_agregar), onClick = onAbrirFormulario)
+    }
+}
