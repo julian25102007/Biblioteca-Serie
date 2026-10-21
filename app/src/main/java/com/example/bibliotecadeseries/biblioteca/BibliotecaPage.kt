@@ -1,4 +1,4 @@
-package com.example.bibliotecadeseries.ui.biblioteca
+package com.example.bibliotecadeseries.biblioteca
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,27 +19,37 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bibliotecadeseries.R
 import com.example.bibliotecadeseries.data.model.EstadoSerie
-import com.example.bibliotecadeseries.ui.biblioteca.components.BotonPrincipal
-import com.example.bibliotecadeseries.ui.biblioteca.components.EncabezadoFiltro
-import com.example.bibliotecadeseries.ui.biblioteca.components.FiltrosEstado
-import com.example.bibliotecadeseries.ui.biblioteca.components.ResumenCard
-import com.example.bibliotecadeseries.ui.biblioteca.components.SerieCard
+import com.example.bibliotecadeseries.biblioteca.components.BotonPrincipal
+import com.example.bibliotecadeseries.biblioteca.components.EncabezadoFiltro
+import com.example.bibliotecadeseries.biblioteca.components.FiltrosEstado
+import com.example.bibliotecadeseries.biblioteca.components.ResumenCard
+import com.example.bibliotecadeseries.biblioteca.components.SerieCard
 
 @Composable
 fun BibliotecaPage(
-    onAgregarSerie: () -> Unit,
     viewModel: BibliotecaViewModel = viewModel(factory = BibliotecaViewModel.Factory)
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    BibliotecaContent(
-        state = state,
-        onFiltroChange = viewModel::onFiltroChange,
-        onTemporadaMas = viewModel::onTemporadaMas,
-        onTemporadaMenos = viewModel::onTemporadaMenos,
-        onEliminar = viewModel::onEliminar,
-        onAgregarSerie = onAgregarSerie
-    )
+    when (state.pantalla) {
+        Pantalla.LISTA -> BibliotecaContent(
+            state = state,
+            onFiltroChange = viewModel::onFiltroChange,
+            onTemporadaMas = viewModel::onTemporadaMas,
+            onTemporadaMenos = viewModel::onTemporadaMenos,
+            onEliminar = viewModel::onEliminar,
+            onAgregarSerie = viewModel::onAbrirFormulario
+        )
+        Pantalla.AGREGAR -> AgregarSerieScreen(
+            formulario = state.formulario,
+            hayError = state.errorFormulario,
+            onTituloChange = viewModel::onTituloChange,
+            onGeneroChange = viewModel::onGeneroChange,
+            onTemporadasChange = viewModel::onTemporadasChange,
+            onGuardar = viewModel::onAgregar,
+            onCancelar = viewModel::onCancelar
+        )
+    }
 }
 
 @Composable

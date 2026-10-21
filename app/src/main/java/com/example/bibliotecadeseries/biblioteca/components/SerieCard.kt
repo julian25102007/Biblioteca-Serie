@@ -1,4 +1,4 @@
-package com.example.bibliotecadeseries.ui.biblioteca.components
+package com.example.bibliotecadeseries.biblioteca.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
