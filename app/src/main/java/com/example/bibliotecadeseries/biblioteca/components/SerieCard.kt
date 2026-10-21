@@ -1,5 +1,6 @@
 package com.example.bibliotecadeseries.ui.biblioteca.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -10,8 +11,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,6 +37,9 @@ import com.example.bibliotecadeseries.ui.theme.BibliotecaColores
 @Composable
 fun SerieCard(
     serie: Serie,
+    onMas: () -> Unit,
+    onMenos: () -> Unit,
+    onEliminar: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -54,15 +64,31 @@ fun SerieCard(
                     CuadroTemporada(lleno = indice < serie.temporadasVistas)
                 }
             }
-            Text(
-                text = stringResource(
-                    R.string.genero_avance,
-                    serie.genero,
-                    serie.temporadasVistas,
-                    serie.temporadasTotales
-                ),
-                fontSize = 12.sp
-            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(
+                        R.string.genero_avance,
+                        serie.genero,
+                        serie.temporadasVistas,
+                        serie.temporadasTotales
+                    ),
+                    fontSize = 12.sp,
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedIconButton(
+                    onClick = onEliminar,
+                    modifier = Modifier.size(44.dp),
+                    border = BorderStroke(2.dp, BibliotecaColores.Tinta)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.descripcion_eliminar))
+                }
+                FilledIconButton(onClick = onMenos, modifier = Modifier.size(44.dp)) {
+                    Text(text = stringResource(R.string.simbolo_menos), fontSize = 20.sp)
+                }
+                FilledIconButton(onClick = onMas, modifier = Modifier.size(44.dp)) {
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.descripcion_sumar))
+                }
+            }
         }
     }
 }
@@ -89,12 +115,3 @@ private fun colorEstado(estado: EstadoSerie): Color = when (estado) {
     EstadoSerie.VIENDO -> BibliotecaColores.NaranjaSuave
     EstadoSerie.TERMINADA -> BibliotecaColores.VerdeSuave
 }
-
-@Composable
-private fun EstadoSerie.etiqueta(): String = stringResource(
-    when (this) {
-        EstadoSerie.POR_VER -> R.string.estado_por_ver
-        EstadoSerie.VIENDO -> R.string.estado_viendo
-        EstadoSerie.TERMINADA -> R.string.estado_terminada
-    }
-)

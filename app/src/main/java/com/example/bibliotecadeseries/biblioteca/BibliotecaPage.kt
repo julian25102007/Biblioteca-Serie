@@ -18,7 +18,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bibliotecadeseries.R
+import com.example.bibliotecadeseries.data.model.EstadoSerie
 import com.example.bibliotecadeseries.ui.biblioteca.components.BotonPrincipal
+import com.example.bibliotecadeseries.ui.biblioteca.components.EncabezadoFiltro
+import com.example.bibliotecadeseries.ui.biblioteca.components.FiltrosEstado
 import com.example.bibliotecadeseries.ui.biblioteca.components.ResumenCard
 import com.example.bibliotecadeseries.ui.biblioteca.components.SerieCard
 
@@ -31,6 +34,10 @@ fun BibliotecaPage(
 
     BibliotecaContent(
         state = state,
+        onFiltroChange = viewModel::onFiltroChange,
+        onTemporadaMas = viewModel::onTemporadaMas,
+        onTemporadaMenos = viewModel::onTemporadaMenos,
+        onEliminar = viewModel::onEliminar,
         onAgregarSerie = onAgregarSerie
     )
 }
@@ -38,8 +45,14 @@ fun BibliotecaPage(
 @Composable
 private fun BibliotecaContent(
     state: BibliotecaUiState,
+    onFiltroChange: (EstadoSerie?) -> Unit,
+    onTemporadaMas: (Long) -> Unit,
+    onTemporadaMenos: (Long) -> Unit,
+    onEliminar: (Long) -> Unit,
     onAgregarSerie: () -> Unit
 ) {
+    val filtroActivo = state.filtro
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -50,13 +63,18 @@ private fun BibliotecaContent(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            ResumenCard(
-                avanceGeneral = state.avanceGeneral,
-                temporadasVistas = state.temporadasVistas,
-                temporadasTotales = state.temporadasTotales,
-                terminadas = state.terminadas,
-                total = state.total
-            )
+            if (filtroActivo == null) {
+                ResumenCard(
+                    avanceGeneral = state.avanceGeneral,
+                    temporadasVistas = state.temporadasVistas,
+                    temporadasTotales = state.temporadasTotales,
+                    terminadas = state.terminadas,
+                    total = state.total
+                )
+            } else {
+                EncabezadoFiltro(estado = filtroActivo, cantidad = state.series.size)
+            }
+            FiltrosEstado(filtroActual = filtroActivo, onFiltroChange = onFiltroChange)
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -65,7 +83,12 @@ private fun BibliotecaContent(
                     item { Text(text = stringResource(R.string.lista_vacia)) }
                 } else {
                     items(state.series, key = { it.id }) { serie ->
-                        SerieCard(serie = serie)
+                        SerieCard(
+                            serie = serie,
+                            onMas = { onTemporadaMas(serie.id) },
+                            onMenos = { onTemporadaMenos(serie.id) },
+                            onEliminar = { onEliminar(serie.id) }
+                        )
                     }
                 }
             }
