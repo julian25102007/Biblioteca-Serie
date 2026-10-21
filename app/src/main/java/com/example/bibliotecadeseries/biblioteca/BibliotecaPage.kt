@@ -18,83 +18,61 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bibliotecadeseries.R
-import com.example.bibliotecadeseries.data.model.EstadoSerie
 import com.example.bibliotecadeseries.ui.biblioteca.components.BotonPrincipal
-import com.example.bibliotecadeseries.ui.biblioteca.components.FiltrosEstado
 import com.example.bibliotecadeseries.ui.biblioteca.components.ResumenCard
 import com.example.bibliotecadeseries.ui.biblioteca.components.SerieCard
-import com.example.bibliotecadeseries.ui.theme.BibliotecaTheme
 
 @Composable
-fun BibliotecaPage(viewModel: BibliotecaViewModel = viewModel()) {
+fun BibliotecaPage(
+    onAgregarSerie: () -> Unit,
+    viewModel: BibliotecaViewModel = viewModel(factory = BibliotecaViewModel.Factory)
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    BibliotecaTheme {
-        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            when (state.pantalla) {
-                Pantalla.LISTA -> ListaContent(
-                    state = state,
-                    onFiltroChange = viewModel::onFiltroChange,
-                    onTemporadaMas = viewModel::onTemporadaMas,
-                    onTemporadaMenos = viewModel::onTemporadaMenos,
-                    onEliminar = viewModel::onEliminar,
-                    onAbrirFormulario = viewModel::onAbrirFormulario
-                )
-                Pantalla.AGREGAR -> AgregarSerieScreen(
-                    formulario = state.formulario,
-                    hayError = state.errorFormulario,
-                    onTituloChange = viewModel::onTituloChange,
-                    onGeneroChange = viewModel::onGeneroChange,
-                    onTemporadasChange = viewModel::onTemporadasChange,
-                    onGuardar = viewModel::onAgregar,
-                    onCancelar = viewModel::onCancelar
-                )
-            }
-        }
-    }
+    BibliotecaContent(
+        state = state,
+        onAgregarSerie = onAgregarSerie
+    )
 }
 
 @Composable
-private fun ListaContent(
+private fun BibliotecaContent(
     state: BibliotecaUiState,
-    onFiltroChange: (EstadoSerie?) -> Unit,
-    onTemporadaMas: (Long) -> Unit,
-    onTemporadaMenos: (Long) -> Unit,
-    onEliminar: (Long) -> Unit,
-    onAbrirFormulario: () -> Unit
+    onAgregarSerie: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeDrawingPadding()
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
-        ResumenCard(
-            avanceGeneral = state.avanceGeneral,
-            temporadasVistas = state.temporadasVistas,
-            temporadasTotales = state.temporadasTotales,
-            terminadas = state.terminadas,
-            total = state.total
-        )
-        FiltrosEstado(filtroActual = state.filtro, onFiltroChange = onFiltroChange)
-        LazyColumn(
-            modifier = Modifier.weight(1f),
+        Column(
+            modifier = Modifier
+                .safeDrawingPadding()
+                .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            if (state.series.isEmpty()) {
-                item { Text(text = stringResource(R.string.lista_vacia)) }
-            } else {
-                items(state.series, key = { it.id }) { serie ->
-                    SerieCard(
-                        serie = serie,
-                        onMas = { onTemporadaMas(serie.id) },
-                        onMenos = { onTemporadaMenos(serie.id) },
-                        onEliminar = { onEliminar(serie.id) }
-                    )
+            ResumenCard(
+                avanceGeneral = state.avanceGeneral,
+                temporadasVistas = state.temporadasVistas,
+                temporadasTotales = state.temporadasTotales,
+                terminadas = state.terminadas,
+                total = state.total
+            )
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                if (state.series.isEmpty()) {
+                    item { Text(text = stringResource(R.string.lista_vacia)) }
+                } else {
+                    items(state.series, key = { it.id }) { serie ->
+                        SerieCard(serie = serie)
+                    }
                 }
             }
+            BotonPrincipal(
+                texto = stringResource(R.string.boton_agregar),
+                onClick = onAgregarSerie
+            )
         }
-        BotonPrincipal(texto = stringResource(R.string.boton_agregar), onClick = onAbrirFormulario)
     }
 }
