@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.bibliotecadeseries.appContainer
+import com.example.bibliotecadeseries.domain.model.DatosSerie
 import com.example.bibliotecadeseries.domain.model.Serie
 import com.example.bibliotecadeseries.domain.repository.AuthRepository
 import com.example.bibliotecadeseries.domain.repository.SeriesRepository
@@ -18,6 +19,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class SeriesViewModel(
     private val seriesRepository: SeriesRepository,
@@ -28,6 +31,9 @@ class SeriesViewModel(
     val uiState: StateFlow<SeriesUiState> = _uiState.asStateFlow()
 
     private var loadJob: Job? = null
+
+
+    private val mutexTemporadas = Mutex()
 
 
     fun cargarSeries() {
@@ -51,6 +57,42 @@ class SeriesViewModel(
                 state.copy(isLoading = false, errorMessage = mensaje)
             } else {
                 state.copy(isLoading = false, userMessage = mensaje)
+            }
+        }
+    }
+
+
+    fun onCambiarTemporadas(serieId: Int, delta: Int) {
+        val actual = _uiState.value.series.firstOrNull { it.id == serieId } ?: return
+        val nuevas = (actual.temporadasVistas + delta).coerceIn(0, actual.temporadasTotales)
+        if (nuevas == actual.temporadasVistas) return
+
+        // Se actualiza la pantalla al instante y luego se guarda en la API.
+        _uiState.update { state ->
+            state.copy(series = state.series.map {
+                if (it.id == serieId) it.copy(temporadasVistas = nuevas) else it
+            })
+        }
+
+        viewModelScope.launch {
+            mutexTemporadas.withLock {
+                seriesRepository.updateSerie(
+                    serieId,
+                    DatosSerie(
+                        titulo = actual.titulo,
+                        genero = actual.genero,
+                        plataforma = actual.plataforma,
+                        temporadasTotales = actual.temporadasTotales,
+                        temporadasVistas = nuevas,
+                        favorita = actual.favorita
+                    )
+                ).fold(
+                    onSuccess = { },
+                    onFailure = { error ->
+                        _uiState.update { it.copy(userMessage = error.toMessage()) }
+                        cargarSeries()
+                    }
+                )
             }
         }
     }
