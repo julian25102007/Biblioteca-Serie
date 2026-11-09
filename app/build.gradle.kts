@@ -37,9 +37,19 @@ android {
 }
 
 dependencies {
-    implementation("androidx.datastore:datastore-preferences:1.2.1")
+
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.kotlinx)
+    implementation(libs.okhttp)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.coroutines.android)
+
+
+    implementation(libs.androidx.navigation.compose)
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
+
+
     implementation("androidx.compose.material:material-icons-core")
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
@@ -49,6 +59,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

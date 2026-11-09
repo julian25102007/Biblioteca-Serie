@@ -56,7 +56,6 @@ class AppContainer(context: Context) {
     }
 
     private companion object {
-
-        const val BASE_URL = "https://TU-SERVICIO.onrender.com/"
+        const val BASE_URL = "https://api-biblioteca-ec1t.onrender.com/"
     }
 }
